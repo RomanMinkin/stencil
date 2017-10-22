@@ -24,11 +24,11 @@ export function proxyHostElementPrototype(plt: PlatformApi, membersMeta: Members
           // host element getter (cannot be arrow fn)
           // yup, ugly, srynotsry
           // but its creating _values if it doesn't already exist
-          return (((this as any) as HostElement)._values = ((this as any) as HostElement)._values || {})[memberName];
+          return ((this as HostElement)._values = (this as HostElement)._values || {})[memberName];
         },
         function setHostElementProp(newValue: any) {
           // host element setter (cannot be arrow fn)
-          setProp(plt, this, memberName, newValue);
+          setProp(plt, (this as HostElement), memberName, newValue);
         }
       );
 
@@ -84,7 +84,7 @@ export function defineMember(plt: PlatformApi, cmpMeta: ComponentMeta, elm: Host
   if (memberType === MEMBER_TYPE.Prop || memberType === MEMBER_TYPE.State || memberType === MEMBER_TYPE.PropMutable) {
 
     if (memberType !== MEMBER_TYPE.State) {
-      if (memberMeta.attribName && elm._values[memberName] === undefined) {
+      if (memberMeta.attribName && (elm._values[memberName] === undefined || elm._values[memberName] === '')) {
         // check the prop value from the host element attribute
         const hostAttrValue = elm.getAttribute(memberMeta.attribName);
         if (hostAttrValue != null) {

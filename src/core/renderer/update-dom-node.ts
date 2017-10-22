@@ -2,45 +2,45 @@ import { PlatformApi, VNode } from '../../util/interfaces';
 
 
 let DEFAULT_OPTS: any = null;
+const EMPTY_OBJ: any = {};
+const EMPTY_ARR: any[] = [];
 
-export function updateElement(plt: PlatformApi, oldVnode: VNode | null, newVnode: VNode, isSvgMode: boolean): void {
-  let name;
+
+export function updateElement(plt: PlatformApi, oldVnode: VNode | null, newVnode: VNode, isSvgMode: boolean, propName?: string): void {
   const elm = newVnode.elm as any;
-  const oldVnodeAttrs = (oldVnode != null && oldVnode.vattrs != null) ? oldVnode.vattrs : {};
-  const newVnodeAttrs = (newVnode.vattrs != null) ? newVnode.vattrs : {};
+  const oldVnodeAttrs = (oldVnode != null && oldVnode.vattrs != null) ? oldVnode.vattrs : EMPTY_OBJ;
+  const newVnodeAttrs = (newVnode.vattrs != null) ? newVnode.vattrs : EMPTY_OBJ;
 
   // remove attributes no longer present on the vnode by setting them to undefined
-  for (name in oldVnodeAttrs) {
-    if (!(newVnodeAttrs && newVnodeAttrs[name] != null) && oldVnodeAttrs[name] != null) {
-      setAccessor(plt, elm, name, oldVnodeAttrs[name], oldVnodeAttrs[name] = undefined, isSvgMode);
+  for (propName in oldVnodeAttrs) {
+    if (!(newVnodeAttrs && newVnodeAttrs[propName] != null) && oldVnodeAttrs[propName] != null) {
+      setAccessor(plt, elm, propName, oldVnodeAttrs[propName], oldVnodeAttrs[propName] = undefined, isSvgMode);
     }
   }
 
   // add new & update changed attributes
-  for (name in newVnodeAttrs) {
-    if (!(name in oldVnodeAttrs) || newVnodeAttrs[name] !== (name === 'value' || name === 'checked' ? elm[name] : oldVnodeAttrs[name])) {
-      setAccessor(plt, elm, name, oldVnodeAttrs[name], oldVnodeAttrs[name] = newVnodeAttrs[name], isSvgMode);
+  for (propName in newVnodeAttrs) {
+    if (!(propName in oldVnodeAttrs) || newVnodeAttrs[propName] !== (propName === 'value' || propName === 'checked' ? elm[propName] : oldVnodeAttrs[propName])) {
+      setAccessor(plt, elm, propName, oldVnodeAttrs[propName], oldVnodeAttrs[propName] = newVnodeAttrs[propName], isSvgMode);
     }
   }
 }
 
 
-export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: any, newValue: any, isSvg: boolean) {
-  let key;
-
+export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: any, newValue: any, isSvg: boolean, i?: any, ilen?: number) {
   // Class
   if (name === 'class' && !isSvg) {
     if (oldValue !== newValue) {
-      let oldList = (oldValue == null || oldValue === '') ? [] : oldValue.trim().split(/\s+/);
-      let newList = (newValue == null || newValue === '') ? [] : newValue.trim().split(/\s+/);
-      let i, listLength;
+      let oldList = (oldValue == null || oldValue === '') ? EMPTY_ARR : oldValue.trim().split(/\s+/);
+      let newList = (newValue == null || newValue === '') ? EMPTY_ARR : newValue.trim().split(/\s+/);
 
-      for (i = 0, listLength = oldList.length; i < listLength; i += 1) {
+      for (i = 0, ilen = oldList.length; i < ilen; i++) {
         if (newList.indexOf(oldList[i]) === -1) {
           elm.classList.remove(oldList[i]);
         }
       }
-      for (i = 0, listLength = newList.length; i < listLength; i += 1) {
+
+      for (i = 0, ilen = newList.length; i < ilen; i++) {
         if (oldList.indexOf(newList[i]) === -1) {
           elm.classList.add(newList[i]);
         }
@@ -49,18 +49,18 @@ export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: 
 
   // Style
   } else if (name === 'style') {
-    oldValue = oldValue || {};
-    newValue = newValue || {};
+    oldValue = oldValue || EMPTY_OBJ;
+    newValue = newValue || EMPTY_OBJ;
 
-    for (key in oldValue) {
-      if (!newValue[key]) {
-        (elm as any).style[key] = '';
+    for (i in oldValue) {
+      if (!newValue[i]) {
+        (elm as any).style[i] = '';
       }
     }
 
-    for (key in newValue) {
-      if (newValue[key] !== oldValue[key]) {
-        (elm as any).style[key] = newValue[key];
+    for (i in newValue) {
+      if (newValue[i] !== oldValue[i]) {
+        (elm as any).style[i] = newValue[i];
       }
     }
 
@@ -91,17 +91,26 @@ export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: 
    */
   } else if (name !== 'list' && name !== 'type' && !isSvg &&
       (name in elm || (['object', 'function'].indexOf(typeof newValue) !== -1) && newValue !== null)) {
-    setProperty(elm, name, newValue == null ? '' : newValue);
-    if (newValue == null || newValue === false) {
-      elm.removeAttribute(name);
+
+    const cmpMeta = plt.getComponentMeta(elm);
+    if (cmpMeta && cmpMeta.membersMeta && name in cmpMeta.membersMeta) {
+      // setting a known @Prop on this element
+      setProperty(elm, name, newValue);
+
+    } else {
+      // property setting a prop on a native property, like "value" or something
+      setProperty(elm, name, newValue == null ? '' : newValue);
+      if (newValue == null || newValue === false) {
+        elm.removeAttribute(name);
+      }
     }
 
   // Element Attributes
   } else if (newValue != null) {
-    let ns = (name !== (name = name.replace(/^xlink\:?/, '')));
+    i = (name !== (name = name.replace(/^xlink\:?/, '')));
 
     if (BOOLEAN_ATTRS[name] === 1 && (!newValue || newValue === 'false')) {
-      if (ns) {
+      if (i) {
         elm.removeAttributeNS(XLINK_NS, name.toLowerCase());
 
       } else {
@@ -109,7 +118,7 @@ export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: 
       }
 
     } else if (typeof newValue !== 'function') {
-      if (ns) {
+      if (i) {
         elm.setAttributeNS(XLINK_NS, name.toLowerCase(), newValue);
 
       } else {
