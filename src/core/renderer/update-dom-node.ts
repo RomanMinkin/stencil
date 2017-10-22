@@ -8,8 +8,8 @@ const EMPTY_ARR: any[] = [];
 
 export function updateElement(plt: PlatformApi, oldVnode: VNode | null, newVnode: VNode, isSvgMode: boolean, propName?: string): void {
   const elm = newVnode.elm as any;
-  const oldVnodeAttrs = (oldVnode != null && oldVnode.vattrs != null) ? oldVnode.vattrs : EMPTY_OBJ;
-  const newVnodeAttrs = (newVnode.vattrs != null) ? newVnode.vattrs : EMPTY_OBJ;
+  const oldVnodeAttrs = (oldVnode != null && oldVnode.vattrs != null) ? oldVnode.vattrs : {};
+  const newVnodeAttrs = (newVnode.vattrs != null) ? newVnode.vattrs : {};
 
   // remove attributes no longer present on the vnode by setting them to undefined
   for (propName in oldVnodeAttrs) {
