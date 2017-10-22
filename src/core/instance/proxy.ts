@@ -82,37 +82,9 @@ export function defineMember(plt: PlatformApi, cmpMeta: ComponentMeta, elm: Host
   }
 
   if (memberType === MEMBER_TYPE.Prop || memberType === MEMBER_TYPE.State || memberType === MEMBER_TYPE.PropMutable) {
-    // https://developers.google.com/web/fundamentals/web-components/best-practices
-    // A developer might attempt to set a property on your element
-    // before its definition has been loaded. This is especially true
-    // if the developer is using a framework which handles loading components,
-    // inserting them into to the page, and binding their properties to a
-    // model. A custom element should handle this scenario by checking if
-    // any properties have already been set on its instance.
-    // note: initial values from attribute would have already been set via attributeChangedCallback
-
-    if (instance.hasOwnProperty(memberName)) {
-      // @Prop() or @Prop({mutable:true}) or @State()
-      // read any "own" property instance values already set
-      // to our internal value as the source of getter data
-      // we're about to define a property and it'll overwrite this "own" property
-      elm._values[memberName] = (instance as any)[memberName];
-    }
 
     if (memberType !== MEMBER_TYPE.State) {
-      if (elm.hasOwnProperty(memberName)) {
-        // @Prop or @Prop({mutable:true})
-        // property values on the host element should
-        // override any default values on the component
-        // instance which is why this check is second
-        // we've already created getters/setters on the
-        // host elements's prototype so we're good
-        // so delete the "own" property
-        elm._values[memberName] = (elm as any)[memberName];
-        delete (elm as any)[memberName];
-      }
-
-      if (memberMeta.attribName) {
+      if (memberMeta.attribName && elm._values[memberName] === undefined) {
         // check the prop value from the host element attribute
         const hostAttrValue = elm.getAttribute(memberMeta.attribName);
         if (hostAttrValue != null) {
@@ -121,9 +93,32 @@ export function defineMember(plt: PlatformApi, cmpMeta: ComponentMeta, elm: Host
           elm._values[memberName] = parsePropertyValue(memberMeta.propType, hostAttrValue);
         }
       }
+      if (elm.hasOwnProperty(memberName)) {
+        // @Prop or @Prop({mutable:true})
+        // property values on the host element should override
+        // any default values on the component instance
+        if (elm._values[memberName] === undefined) {
+          elm._values[memberName] = (elm as any)[memberName];
+        }
+
+        // we've already created getters/setters on the
+        // host elements's prototype so we're good
+        // to delete the "own" property
+        delete (elm as any)[memberName];
+      }
+    }
+
+    if (instance.hasOwnProperty(memberName) && elm._values[memberName] === undefined) {
+      // @Prop() or @Prop({mutable:true}) or @State()
+      // we haven't yet got a value from the above checks so let's
+      // read any "own" property instance values already set
+      // to our internal value as the source of getter data
+      // we're about to define a property and it'll overwrite this "own" property
+      elm._values[memberName] = (instance as any)[memberName];
     }
 
     // add getter/setter to the component instance
+    // these will be pointed to the internal data set from the above checks
     defineProperty(
       instance,
       memberName,
