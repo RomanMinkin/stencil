@@ -24,7 +24,7 @@ export function disconnectedCallback(plt: PlatformApi, elm: HostElement) {
     if (instance) {
       // call the user's componentDidUnload if there is one
       instance.componentDidUnload && instance.componentDidUnload();
-      elm.$instance = instance.__el = instance.__values = instance.__values.__propWillChange = instance.__values.__propDidChange = null;
+      elm.$instance = instance.__el = null;
     }
 
     // detatch any event listeners that may have been added
@@ -43,7 +43,7 @@ export function disconnectedCallback(plt: PlatformApi, elm: HostElement) {
     // set it all to null to ensure we forget references
     // and reset values incase this node gets reused somehow
     // (possible that it got disconnected, but the node was reused)
-    elm.$activeLoading = elm.$connected = elm.$defaultHolder = elm._root = elm._vnode = elm._ancestorHostElement = elm._hasLoaded = elm._isQueuedForUpdate = elm._observer = null;
+    elm.$activeLoading = elm.$connected = elm.$defaultHolder = elm._root = elm._values = elm._vnode = elm._ancestorHostElement = elm._hasLoaded = elm._isQueuedForUpdate = elm._observer = null;
   }
 }
 
