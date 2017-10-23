@@ -52,12 +52,10 @@ export function initHostConstructor(plt: PlatformApi, cmpMeta: ComponentMeta, Ho
     render(plt, (this as HostElement), plt.getComponentMeta((this as HostElement)), isInitialRender);
   };
 
-  if (cmpMeta.membersMeta) {
-    // add getters/setters to the host element members
-    // these would come from the @Prop and @Method decorators that
-    // should create the public API to this component
-    proxyHostElementPrototype(plt, cmpMeta.membersMeta, HostElementConstructor);
-  }
+  // add getters/setters to the host element members
+  // these would come from the @Prop and @Method decorators that
+  // should create the public API to this component
+  proxyHostElementPrototype(plt, cmpMeta.membersMeta, HostElementConstructor);
 }
 
 

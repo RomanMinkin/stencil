@@ -10,7 +10,7 @@ export function proxyHostElementPrototype(plt: PlatformApi, membersMeta: Members
   // create getters/setters on the host element prototype to represent the public API
   // the setters allows us to know when data has changed so we can re-render
 
-  Object.keys(membersMeta).forEach(memberName => {
+  membersMeta && Object.keys(membersMeta).forEach(memberName => {
     // add getters/setters
     const memberType = membersMeta[memberName].memberType;
 
