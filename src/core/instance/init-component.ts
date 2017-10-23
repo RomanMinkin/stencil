@@ -14,9 +14,6 @@ export function initComponentInstance(plt: PlatformApi, elm: HostElement) {
     // ok cool, we've got an host element now, and a actual instance
     // and there were no errors creating the instance
 
-    // let's automatically add a reference to the host element on the instance
-    elm.$instance.__el = elm;
-
     // let's upgrade the data on the host element
     // and let the getters/setters do their jobs
     proxyComponentInstance(plt, cmpMeta, elm, instance);
