@@ -178,9 +178,7 @@ export function addEventListener(
 
   // return a function which is used to remove this very same listener
   return function removeListener() {
-    if (elm) {
-      elm.removeEventListener(eventName, eventListener, eventListenerOpts);
-    }
+    elm && elm.removeEventListener(eventName, eventListener, eventListenerOpts);
   };
 }
 
