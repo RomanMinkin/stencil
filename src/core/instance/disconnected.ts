@@ -1,6 +1,5 @@
 import { detachListeners } from './listeners';
 import { HostElement, PlatformApi } from '../../util/interfaces';
-import { invokeDestroy } from '../renderer/patch';
 import { propagateElementLoaded } from './init-component';
 
 
@@ -21,9 +20,6 @@ export function disconnectedCallback(plt: PlatformApi, elm: HostElement) {
     // detatch any event listeners that may have been added
     // this will also set _listeners to null if there are any
     detachListeners(elm);
-
-    // destroy the vnode and child vnodes if they exist
-    invokeDestroy(elm._vnode);
 
     if (elm._hostContentNodes) {
       // overreacting here just to reduce any memory leak issues

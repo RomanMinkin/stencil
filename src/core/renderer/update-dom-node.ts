@@ -1,7 +1,7 @@
+import { addEventListener } from '../instance/listeners';
 import { PlatformApi, VNode } from '../../util/interfaces';
 
 
-let DEFAULT_OPTS: any = null;
 const EMPTY_OBJ: any = {};
 const EMPTY_ARR: any[] = [];
 
@@ -28,8 +28,8 @@ export function updateElement(plt: PlatformApi, oldVnode: VNode | null, newVnode
 
 
 export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: any, newValue: any, isSvg: boolean, i?: any, ilen?: number) {
-  // Class
   if (name === 'class' && !isSvg) {
+    // Class
     if (oldValue !== newValue) {
       let oldList = (oldValue == null || oldValue === '') ? EMPTY_ARR : oldValue.trim().split(/\s+/);
       let newList = (newValue == null || newValue === '') ? EMPTY_ARR : newValue.trim().split(/\s+/);
@@ -47,8 +47,8 @@ export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: 
       }
     }
 
-  // Style
   } else if (name === 'style') {
+    // Style
     oldValue = oldValue || EMPTY_OBJ;
     newValue = newValue || EMPTY_OBJ;
 
@@ -64,33 +64,30 @@ export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: 
       }
     }
 
-  // Event Handlers
   } else if (name[0] === 'o' && name[1] === 'n' && (!(name in elm))) {
+    // Event Handlers
+    // adding an standard event listener, like <button onClick=...> or something
 
-    if (!DEFAULT_OPTS) {
-      DEFAULT_OPTS = plt.getEventOptions();
-    }
     name = name.toLowerCase().substring(2);
+    const listeners = (elm._listeners = elm._listeners || {});
 
     if (newValue) {
       if (!oldValue) {
-        elm.addEventListener(name, eventProxy, DEFAULT_OPTS);
+        // add listener
+        listeners[name] = addEventListener(plt, elm, name, newValue);
       }
 
-    } else {
-      elm.removeEventListener(name, eventProxy, DEFAULT_OPTS);
+    } else if (listeners[name]) {
+      // remove listener
+      listeners[name]();
     }
 
-    (elm._listeners || (elm._listeners = {}))[name] = newValue;
-
-  /**
-   * Properties
-   * - list and type are attributes that get applied as values on the element
-   * - all svgs get values as attributes not props
-   * - check if elm contains name or if the value is array, object, or function
-   */
   } else if (name !== 'list' && name !== 'type' && !isSvg &&
-      (name in elm || (['object', 'function'].indexOf(typeof newValue) !== -1) && newValue !== null)) {
+    (name in elm || (['object', 'function'].indexOf(typeof newValue) !== -1) && newValue !== null)) {
+    // Properties
+    // - list and type are attributes that get applied as values on the element
+    // - all svgs get values as attributes not props
+    // - check if elm contains name or if the value is array, object, or function
 
     const cmpMeta = plt.getComponentMeta(elm);
     if (cmpMeta && cmpMeta.membersMeta && name in cmpMeta.membersMeta) {
@@ -105,8 +102,8 @@ export function setAccessor(plt: PlatformApi, elm: any, name: string, oldValue: 
       }
     }
 
-  // Element Attributes
   } else if (newValue != null) {
+    // Element Attributes
     i = (name !== (name = name.replace(/^xlink\:?/, '')));
 
     if (BOOLEAN_ATTRS[name] === 1 && (!newValue || newValue === 'false')) {
@@ -138,13 +135,6 @@ function setProperty(elm: any, name: string, value: any) {
   } catch (e) { }
 }
 
-
-/**
- * Proxy an event to hooked event handlers
- */
-export function eventProxy(this: any, e: Event) {
-  return (this as any)._listeners[e.type](e);
-}
 
 const BOOLEAN_ATTRS: any = {
   'allowfullscreen': 1,
