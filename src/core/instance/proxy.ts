@@ -28,7 +28,7 @@ export function proxyHostElementPrototype(plt: PlatformApi, membersMeta: Members
         },
         function setHostElementProp(newValue: any) {
           // host element setter (cannot be arrow fn)
-          setProp(plt, (this as HostElement), memberName, newValue);
+          setValue(plt, (this as HostElement), memberName, newValue);
         }
       );
 
@@ -77,7 +77,7 @@ export function defineMember(plt: PlatformApi, cmpMeta: ComponentMeta, elm: Host
     const elm: HostElement = (this as ComponentInstance).__el;
 
     if (memberType !== MEMBER_TYPE.Prop) {
-      setProp(plt, elm, memberName, newValue);
+      setValue(plt, elm, memberName, newValue);
 
     } else {
       console.warn(`@Prop() "${memberName}" on "${elm.tagName}" cannot be modified.`);
@@ -174,7 +174,7 @@ export function proxyPropChangeMethods(propChangeMeta: PropChangeMeta[], prefix:
 }
 
 
-function setProp(plt: PlatformApi, elm: HostElement, memberName: string, newVal: any) {
+export function setValue(plt: PlatformApi, elm: HostElement, memberName: string, newVal: any) {
   // get the internal values object, which should always come from the host element instance
   // create the _values object if it doesn't already exist
   const internalValues = (elm._values = elm._values || {});
