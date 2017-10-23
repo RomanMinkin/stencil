@@ -121,6 +121,12 @@ export function addEventListener(
   // depending on the event name, we could actually be
   // attaching this element to something like the document or window
   let splt = eventName.split(':');
+  let testKeyCode = 0;
+
+  // get our event listener options
+  // mainly this is used to set passive events if this browser supports it
+  const eventListenerOpts = plt.getEventOptions(useCapture, usePassive);
+
   if (elm && splt.length > 1) {
     // document:mousemove
     // parent:touchend
@@ -136,36 +142,36 @@ export function addEventListener(
 
   // test to see if we're looking for an exact keycode
   splt = eventName.split('.');
-  let testKeyCode = 0;
-
-  // default to the event listener being the original callback
-  let eventListener = listenerCallback;
 
   if (splt.length > 1) {
     // looks like this listener is also looking for a keycode
     // keyup.enter
     eventName = splt[0];
     testKeyCode = KEY_CODE_MAP[splt[1]];
-
-    // create the our internal event listener callback we'll be firing off
-    // within it is the user's event listener callback and some other goodies
-    eventListener = (ev: any) => {
-      if (testKeyCode > 0 && ev.keyCode !== testKeyCode) {
-        // we're looking for a specific keycode
-        // but the one we were given wasn't the right keycode
-        return;
-      }
-
-      // fire the user's component event listener callback
-      // if the instance isn't ready yet, this listener is already
-      // set to handle that and re-queue the update when it is ready
-      listenerCallback(ev);
-    };
   }
 
-  // get our event listener options
-  // mainly this is used to set passive events if this browser supports it
-  const eventListenerOpts = plt.getEventOptions(useCapture, usePassive);
+  // create the our internal event listener callback we'll be firing off
+  // within it is the user's event listener callback and some other goodies
+  function eventListener(ev: any) {
+    if (testKeyCode > 0 && ev.keyCode !== testKeyCode) {
+      // we're looking for a specific keycode
+      // but the one we were given wasn't the right keycode
+      return;
+    }
+
+    // fire the user's component event listener callback
+    // if the instance isn't ready yet, this listener is already
+    // set to handle that and re-queue the update when it is ready
+    listenerCallback(ev);
+
+    if ((elm as HostElement).$instance) {
+      // only queue an update if this element itself is a host element
+      // and only queue an update if host element's instance is ready
+      // once its instance has been created, it'll then queue the update again
+      // queue it up for an update which then runs a re-render
+      (elm as HostElement)._queueUpdate();
+    }
+  }
 
   // ok, good to go, let's add the actual listener to the dom element
   elm.addEventListener(eventName, eventListener, eventListenerOpts);
